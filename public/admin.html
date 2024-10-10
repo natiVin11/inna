@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פאנל ניהול</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Styles for the login modal */
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .login-modal input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 80%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .login-modal button {
+            padding: 10px 20px;
+            background-color: #004e7c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .login-modal button:hover {
+            background-color: #003952;
+        }
+    </style>
+</head>
+<body>
+<div class="login-modal" id="login-modal">
+    <div class="login-modal-content">
+        <h2>התחבר</h2>
+        <input type="text" id="username" placeholder="שם משתמש" required>
+        <input type="password" id="password" placeholder="סיסמה" required>
+        <button id="login-button">כניסה</button>
+    </div>
+</div>
+
+<header>
+    <h1>פאנל ניהול - צפייה בפניות</h1>
+</header>
+
+<section id="admin" style="display: none;">
+    <h2>כל הפניות</h2>
+    <table id="contactsTable" border="1">
+        <thead>
+        <tr>
+            <th>שם</th>
+            <th>אימייל</th>
+            <th>טלפון</th>
+            <th>הודעה</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- הפניות ייטענו כאן -->
+        </tbody>
+    </table>
+
+    <h2>הוסף טיפ חדש</h2>
+    <form id="tip-form">
+        <input type="text" id="tip-title" placeholder="כותרת הטיפ" required>
+        <textarea id="tip-content" placeholder="הכנס את הטיפ שלך" required></textarea>
+        <button type="submit">הוסף טיפ</button>
+    </form>
+
+    <h2>הטיפים הקיימים</h2>
+    <div id="tips-section">
+        <!-- כאן יוצגו כל הטיפים -->
+    </div>
+</section>
+
+<script src="admin.js"></script>
+<script>
+    // פונקציה לטעינת הטיפים מהשרת והצגתם בדף
+    async function loadTips() {
+        try {
+            const response = await fetch('/tips'); // כאן אנחנו טוענים את הטיפים מקובץ JSON
+            const tips = await response.json();
+
+            const tipsSection = document.getElementById('tips-section');
+            tipsSection.innerHTML = ''; // ננקה את התוכן הקודם
+
+            tips.forEach(tip => {
+                const tipElement = document.createElement('div');
+                tipElement.classList.add('tip');
+                tipElement.innerHTML = `<strong>${tip.title}</strong>: ${tip.content}`; // מציגים את הכותרת והטיפ
+                tipsSection.appendChild(tipElement);
+            });
+        } catch (error) {
+            console.error('Error loading tips:', error);
+        }
+    }
+
+    // קריאה לפונקציה לטעינת הטיפים כשנטען הדף
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTips();
+        document.getElementById('login-modal').style.display = 'flex'; // להציג את המודל של ההתחברות
+    });
+
+    // טיפול בהגשת הטופס להוספת טיפ
+    document.getElementById('tip-form').addEventListener('submit', async function(event) {
+        event.preventDefault(); // מונעים מהטופס להיטען מחדש
+
+        const tipTitle = document.getElementById('tip-title').value;
+        const tipContent = document.getElementById('tip-content').value;
+
+        try {
+            const response = await fetch('/tips', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: tipTitle, content: tipContent })
+            });
+
+            if (response.ok) {
+                loadTips(); // נטען מחדש את הטיפים
+                document.getElementById('tip-title').value = ''; // ננקה את שדה הכותרת
+                document.getElementById('tip-content').value = ''; // ננקה את שדה הטיפ
+                alert('הטיפ נוסף בהצלחה!');
+            } else {
+                alert('שגיאה בהוספת הטיפ.');
+            }
+        } catch (error) {
+            console.error('Error adding tip:', error);
+            alert('שגיאה בהוספת הטיפ.');
+        }
+    });
+
+    // טיפול בלחצן הכניסה
+    document.getElementById('login-button').addEventListener('click', function() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (username === 'inna' && password === '1234') {
+            document.getElementById('login-modal').style.display = 'none'; // להסתיר את המודל
+            document.getElementById('admin').style.display = 'block'; // להציג את הפאנל
+        } else {
+            alert('שם משתמש או סיסמה שגויים!');
+        }
+    });
+
+    // פונקציה לשליחת פרטי הקשר לשרת
+    async function sendContactDetails(contact) {
+        try {
+            const response = await fetch('/contacts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(contact)
+            });
+
+            if (response.ok) {
+                alert('הפרטים נשלחו בהצלחה!');
+            } else {
+                alert('שגיאה בשליחת הפרטים.');
+            }
+        } catch (error) {
+            console.error('Error sending contact details:', error);
+            alert('שגיאה בשליחת הפרטים.');
+        }
+    }
+</script>
+</body>
+</html>

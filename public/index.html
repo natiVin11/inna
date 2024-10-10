@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>יועצת התפתחותית אישית וזוגית</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="loader">
+    <div class="spinner"></div>
+</div>
+
+<header class="fade-in">
+    <div class="logo">
+        <h1>יועצת התפתחותית אישית וזוגית</h1>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="#about">אודות</a></li>
+            <li><a href="#services">שירותים</a></li>
+            <li><a href="#tips">טיפים</a></li>
+            <li><a href="#contact">יצירת קשר</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="hero parallax">
+    <div class="hero-content">
+        <h2 class="slide-in">החזירו את השקט והאהבה לזוגיות שלכם</h2>
+        <p class="slide-in">הגיע הזמן לטפל בזוגיות שלכם בצורה בריאה, ולהחזיר את החיוך ואת האהבה.</p>
+        <a href="#contact" class="cta-button pulse">צרו קשר עוד היום</a>
+    </div>
+</section>
+
+<section id="about" class="fade-in-up">
+    <div class="about-container">
+        <h2>עליי</h2>
+        <div class="about-content">
+            <p>אני יועצת מוסמכת להתפתחות אישית וזוגית עם ניסיון של שנים בטיפול בבעיות זוגיות, אישיות ותקשורתית.</p>
+        </div>
+    </div>
+</section>
+
+<section id="services" class="fade-in-up">
+    <h2>השירותים שלי</h2>
+    <div class="services-container">
+        <div class="service-box zoom-in">
+            <h3>ייעוץ אישי</h3>
+            <p>ליווי אישי לשיפור הביטחון העצמי, תחושת הערך וההתמודדות עם אתגרים אישיים.</p>
+        </div>
+        <div class="service-box zoom-in">
+            <h3>ייעוץ זוגי</h3>
+            <p>טיפול זוגי להחזרת התקשורת הבריאה, האמון והאהבה בזוגיות.</p>
+        </div>
+    </div>
+</section>
+
+<section id="tips" class="fade-in-up">
+    <h2>טיפים</h2>
+    <div id="tips-section">
+        <!-- כאן יוצגו כל הטיפים -->
+    </div>
+</section>
+
+<section id="contact" class="fade-in-up">
+    <h2>צרו קשר</h2>
+    <form id="contactForm">
+        <input type="text" id="name" name="name" placeholder="שם מלא" required>
+        <input type="email" id="email" name="email" placeholder="אימייל" required>
+        <input type="tel" id="phone" name="phone" placeholder="טלפון" required>
+        <textarea id="message" name="message" placeholder="הודעה" required></textarea>
+        <button type="submit" class="cta-button pulse">שלחו הודעה</button>
+    </form>
+</section>
+
+<footer class="fade-in">
+    <p>© 2024 יועצת התפתחותית אישית וזוגית | כל הזכויות שמורות.</p>
+</footer>
+
+<script src="script.js"></script>
+<script>
+    // פונקציה לטעינת הטיפים מהשרת והצגתם בדף
+    async function loadTips() {
+        try {
+            const response = await fetch('tips.json'); // טוען את הטיפים מקובץ JSON
+            if (!response.ok) throw new Error('Network response was not ok');
+            const tips = await response.json();
+
+            const tipsSection = document.getElementById('tips-section');
+            tipsSection.innerHTML = ''; // ננקה את התוכן הקודם
+
+            tips.forEach(tip => {
+                const tipElement = document.createElement('div');
+                tipElement.classList.add('tip');
+
+                // הצגת הכותרת והטיפ
+                const titleElement = document.createElement('h3');
+                titleElement.textContent = tip.title; // מציגים את כותרת הטיפ
+                tipElement.appendChild(titleElement);
+
+                const contentElement = document.createElement('p');
+                contentElement.textContent = tip.content; // מציגים את התוכן של הטיפ
+                tipElement.appendChild(contentElement);
+
+                tipsSection.appendChild(tipElement);
+            });
+        } catch (error) {
+            console.error('Error loading tips:', error);
+        }
+    }
+
+    // טיפול בהגשת הטופס
+    document.getElementById("contactForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // מונע את הגשת הטופס המלאה
+
+        // שליפת ערכי השדות
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const phone = document.getElementById("phone").value;
+        const message = document.getElementById("message").value;
+
+        const contactData = {
+            name: name,
+            email: email,
+            phone: phone,
+            message: message
+        };
+
+        // שליחת הנתונים לשרת
+        fetch('/submitContact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(contactData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById("contactForm").reset(); // מאפס את הטופס
+            })
+            .catch(error => {
+                console.error('Error submitting contact:', error);
+            });
+    });
+
+    // קריאה לפונקציה לטעינת הטיפים כשנטען הדף
+    document.addEventListener('DOMContentLoaded', loadTips);
+</script>
+</body>
+</html>
